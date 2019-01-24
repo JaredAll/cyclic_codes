@@ -3,7 +3,7 @@
  * restricted to 2. 
  * Designed for burst error correction
  * @author Jared Allen
- * @date January 16, 2019
+ * @date January 24, 2019
  */ 
 
 
