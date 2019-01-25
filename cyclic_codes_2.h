@@ -185,7 +185,7 @@ CyclicCode::CyclicCode( vector< uint > param_generator,
   min_distance = distance;
 
   //determine maximum burst length
-  max_burst_length = ( code_length - generator.size() ) / 2;
+  max_burst_length = 3;
   
 }
 
@@ -460,7 +460,7 @@ uint CyclicCode::decode_word( uint received_word ) const
     {
       uint syndrome_burst =
         syndrome_burst_lengths.at( which_syndrome );
-      if( syndrome_burst <= desired_burst_length )
+      if( syndrome_burst == desired_burst_length )
       {
         found_syndrome = true;
         light_syndrome = syndromes.at( which_syndrome );
@@ -472,74 +472,25 @@ uint CyclicCode::decode_word( uint received_word ) const
     desired_burst_length--;
   }
 
-  //if no syndrome meets requirements, use old fashioned
-  //nearest neighbor decoding
+  //if no syndrome meets requirements, return original word
+  //as syndrome decoding fails
   uint decoded_word = 0;
   if( !found_syndrome )
   {
-      /* TESTING */
-
-  //if( is_code_word( decoded_word ) )
-  //{
-  cout << "a word shifted cyclically: " << endl;
-  for( uint word : received_cyclic_shifts )
-  {
-    print_word_bitwise( word );
-  }
-  cout << endl;
-  
-  cout << "the corresponding syndromes: " << endl;
-  print_matrix( syndromes, parity_check.size() );
-  
-  cout << "min distance : " << min_distance << endl;
-  cout << "which syndrome: " << light_syndrome_pos << endl;
-  cout << "light syndrome: ";
-  print_word_bitwise( light_syndrome );
-  cout << "shift syndrome: ";
-  cout << "decoded word: ";
-  print_word_bitwise( decoded_word );
-  if( is_code_word( decoded_word ) )
-  {
-    cout << "decoded successfully." << endl;
-  }
-  else
-  {
-    cout << "failed to decode." << endl;
-  }
-  cout << endl;
-  cout << endl;
-    //}
-    
-  /* END TESTING */
-    return nearest_neighbor( received_word );
+    cout << "no syndrome found." << endl;
+    cout << "Word ";
+    print_word_bitwise( received_word );
+    cout << " --failed to decode." << endl;
+    cout << endl;
+    return received_word;
   }
 
-  
   //shift syndrome to align with proper degree term in polynomial
   //syndromes align left not right
   light_syndrome =
     light_syndrome << ( code_length - parity_check.size() );
-  
-
-  //shift light_syndrome by the proper degree and subtract
-  //remember place values
+  uint syndrome_length = parity_check.size();
   uint shift_amount = code_length - light_syndrome_pos;
-  vector< uint > syndrome_bit_place_values;
-  for( uint i = 0; i < code_length; i++ )
-  {
-    if( ( ( light_syndrome >> i ) & 1 ) == 1 )
-    {
-      syndrome_bit_place_values.push_back( i );
-    }
-  }
-
-  //shift place values
-  for( uint i = 0; i < syndrome_bit_place_values.size(); i++ )
-  {
-    syndrome_bit_place_values.at( i ) =
-      ( syndrome_bit_place_values.at( i )
-        + shift_amount ) % code_length;
-  }
 
   //construct shifted syndrome
   uint shifted_syndrome = 0;
@@ -559,6 +510,7 @@ uint CyclicCode::decode_word( uint received_word ) const
     }
     bit_wrap = false;
   }
+
   shifted_syndrome = light_syndrome;
   light_syndrome = temp;
 
@@ -566,38 +518,43 @@ uint CyclicCode::decode_word( uint received_word ) const
 
   /* TESTING */
 
-  //if( is_code_word( decoded_word ) )
-  //{
-  cout << "a word shifted cyclically: " << endl;
-  for( uint word : received_cyclic_shifts )
+  if( !is_code_word( decoded_word ) )
   {
-    print_word_bitwise( word );
+    cout << "received word shifted cyclically: " << endl;
+    for( uint word : received_cyclic_shifts )
+    {
+      print_word_bitwise( word );
+    }
+    cout << endl;
+  
+    cout << "the corresponding syndromes: " << endl;
+    print_matrix( syndromes, parity_check.size() );
+    
+    cout << "min distance : " << min_distance << endl;
+    cout << "which syndrome: " << light_syndrome_pos << endl;
+    cout << "light syndrome: ";
+    print_word_bitwise( light_syndrome );
+    cout << "shift syndrome: ";
+    print_word_bitwise( shifted_syndrome );
+    cout << "shift amount: " << shift_amount << endl;
+    cout << "decoded word: ";
+    print_word_bitwise( decoded_word );
   }
-  cout << endl;
-  
-  cout << "the corresponding syndromes: " << endl;
-  print_matrix( syndromes, parity_check.size() );
-  
-  cout << "min distance : " << min_distance << endl;
-  cout << "which syndrome: " << light_syndrome_pos << endl;
-  cout << "light syndrome: ";
-  print_word_bitwise( light_syndrome );
-  cout << "shift syndrome: ";
-  print_word_bitwise( shifted_syndrome );
-  cout << "shift amount: " << shift_amount << endl;
-  cout << "decoded word: ";
-  print_word_bitwise( decoded_word );
   if( is_code_word( decoded_word ) )
   {
-    cout << "decoded successfully." << endl;
+    cout << "Word ";
+    print_word_bitwise( received_word );
+    cout << " --decoded successfully." << endl;
+    cout << endl;
   }
   else
   {
-    cout << "failed to decode." << endl;
+    cout << "Word ";
+    print_word_bitwise( received_word );
+    cout << " --failed to decode." << endl;
+    cout << endl;
   }
-  cout << endl;
-  cout << endl;
-    //}
+
     
   /* END TESTING */
   return decoded_word;

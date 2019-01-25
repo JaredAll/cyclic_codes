@@ -617,15 +617,12 @@ int main()
 
   //determine the map between words and encoded words
     vector< uint > encoded_words;
-    uint num_words =
-      find_power( 2, code_length );
+    uint num_words = 16;
+      //find_power( 2, code_length );
 
     for( uint word = 0; word < num_words; word++ )
     {
-      if( this_code.is_code_word( word ) )
-      {
-        encoded_words.push_back( word );
-      }
+      encoded_words.push_back( this_code.encode_word( word ) );
     }
     
     AlphabetMap map = AlphabetMap( encoded_words );
